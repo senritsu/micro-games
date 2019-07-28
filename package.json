@@ -9,11 +9,11 @@
     "test:unit": "vue-cli-service test:unit"
   },
   "dependencies": {
+    "chance": "^1.0.18",
     "collisions": "^2.0.13",
     "core-js": "^2.6.5",
     "gl-matrix": "^3.0.0",
     "mainloop.js": "^1.0.4",
-    "random-js": "^2.1.0",
     "vue": "^2.6.10",
     "vue-router": "^3.0.3",
     "xstate": "^4.6.7"

@@ -1,6 +1,7 @@
 <template lang="html">
   <div class="canvas" :style="style">
-    <slot />
+    <slot name="background" />
+    <slot name="foreground" />
     <div class="ui">
       <slot name="ui" />
     </div>
@@ -35,8 +36,9 @@ export default {
   overflow: hidden;
 
   .ui {
-    flex: 1;
-    align-self: stretch;
+    position: absolute;
+    height: 100%;
+    width: 100%;
 
     display: flex;
     flex-direction: column;
