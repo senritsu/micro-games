@@ -20,7 +20,7 @@ export default {
   computed: {
     style () {
       return {
-        animationDuration: `${600 / this.scrollSpeed}s`
+        animationDuration: `${900 / this.scrollSpeed}s`
       }
     }
   }
@@ -30,7 +30,7 @@ export default {
 <style lang="scss" scoped>
 .parallax {
   width: 400px;
-  height: 1200px;
+  height: 1800px;
   position: absolute;
 
   top: 0;
@@ -43,10 +43,10 @@ export default {
   .half {
     position: absolute;
     width: 400px;
-    height: 600px;
+    height: 900px;
 
     &:nth-child(2) {
-      top: 600px;
+      top: 900px;
     }
   }
 }

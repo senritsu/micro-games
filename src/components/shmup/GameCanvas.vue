@@ -1,7 +1,11 @@
 <template lang="html">
   <div class="canvas" :style="style">
-    <slot name="background" />
-    <slot name="foreground" />
+    <div class="background">
+      <slot name="background" />
+    </div>
+    <div class="foreground">
+      <slot name="foreground" />
+    </div>
     <div class="ui">
       <slot name="ui" />
     </div>
@@ -30,18 +34,16 @@ export default {
 <style lang="scss" scoped>
 .canvas {
   position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
   overflow: hidden;
 
-  .ui {
+  .background, .foreground, .ui {
     position: absolute;
     height: 100%;
     width: 100%;
 
     display: flex;
     flex-direction: column;
+    align-items: center;
   }
 }
 </style>
