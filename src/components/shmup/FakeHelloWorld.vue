@@ -58,6 +58,7 @@ export default {
   position: absolute;
   margin-top: 204px;
   width: 600px;
+  text-align: center;
 }
 
 h3 {
