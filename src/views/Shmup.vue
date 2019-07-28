@@ -1,21 +1,24 @@
 <template lang="html">
   <div class="shmup">
-    <div class="game" :class="{intro, running}">
-      <div class="player" :class="{intro, running}">
-        <img class="ship" alt="Vue logo" src="../assets/logo.png">
-      </div>
+    <GameCanvas :size="[400, 600]" class="game" :class="{intro, running}">
+      <DivSprite :size="[40, 40]" :position="[0, 100]">
+        <img class="ship" :class="{intro, running}" alt="Vue logo" src="../assets/logo.png">
+      </DivSprite>
       <FakeHelloWorld v-if="!running" msg="Welcome to Your Vue.js Shmup" />
-    </div>
-
+    </GameCanvas>
   </div>
 </template>
 
 <script>
-import FakeHelloWorld from '@/components/shmup/FakeHelloWorld.vue'
+import GameCanvas from '@/components/shmup/GameCanvas'
+import DivSprite from '@/components/shmup/DivSprite'
+import FakeHelloWorld from '@/components/shmup/FakeHelloWorld'
 
 export default {
   name: 'shmup',
   components: {
+    GameCanvas,
+    DivSprite,
     FakeHelloWorld
   },
   data () {
@@ -43,38 +46,24 @@ export default {
   align-items: center;
 
   .game {
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-
     transition: background-color 0.5s;
 
     &.running {
       background-color: black;
     }
 
-    .player {
-      position: absolute;
-      transform: translate(0, 500px);
+    .ship {
+      height: 40px;
+      transform: rotateZ(-180deg);
 
-      .ship {
-        height: 40px;
-        transform: translate(0, -50%) rotateZ(180deg);
+      &.intro {
+        transform: translate(0, -400px) scale(5) rotateZ(0);
       }
 
-      &.intro .ship {
-        transform: translate(0, -420px) scale(5) rotateZ(0);
-      }
-
-      &:not(.running) .ship {
+      &:not(.running) {
         transition: transform 1.5s;
       }
     }
   }
-}
-.game {
-  height: 600px;
-  width: 400px
 }
 </style>
