@@ -1,5 +1,7 @@
 # micro-games
 
+Available at [micro-games.senritsu.dev](https://micro-games.senritsu.dev)
+
 ## Project setup
 ```
 npm install

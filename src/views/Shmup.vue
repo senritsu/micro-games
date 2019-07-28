@@ -8,12 +8,34 @@
       </template>
       <template #foreground>
         <DivSprite :size="[40, 40]" :position="[0, 100]">
-          <img class="ship" :class="{intro, running}" alt="Vue logo" src="../assets/logo.png">
+          <img class="ship player" :class="{intro, running}" src="../assets/vue.png">
         </DivSprite>
+        <template v-if="running">
+          <DivSprite :size="[40, 40]" :position="[-150, 500]">
+            <img class="ship" src="../assets/vuetify.svg">
+          </DivSprite>
+          <DivSprite :size="[40, 40]" :position="[-50, 500]">
+            <img class="ship" src="../assets/quasar.svg">
+          </DivSprite>
+          <DivSprite :size="[40, 40]" :position="[50, 500]">
+            <img class="ship" src="../assets/element.svg">
+          </DivSprite>
+          <DivSprite :size="[40, 40]" :position="[150, 500]">
+            <img class="ship" src="../assets/vuesax.png">
+          </DivSprite>
+
+          <DivSprite :size="[30, 30]" :position="[-100, 300]">
+            <img class="powerup" src="../assets/made-with-vue.png">
+          </DivSprite>
+          <DivSprite :size="[30, 30]" :position="[100, 300]">
+            <img class="powerup" src="../assets/made-with-vuetify.png">
+          </DivSprite>
+        </template>
       </template>
     </GameCanvas>
 
     <FakeHelloWorld v-if="!running" msg="Welcome to Your Vue.js Shmup" />
+    <Copyright v-else />
   </div>
 </template>
 
@@ -26,6 +48,7 @@ import DustLayer from '@/components/shmup/background/DustLayer'
 
 import DivSprite from '@/components/shmup/DivSprite'
 import FakeHelloWorld from '@/components/shmup/FakeHelloWorld'
+import Copyright from '@/components/shmup/Copyright'
 
 export default {
   name: 'shmup',
@@ -35,7 +58,8 @@ export default {
     RockLayer,
     DustLayer,
     DivSprite,
-    FakeHelloWorld
+    FakeHelloWorld,
+    Copyright
   },
   data () {
     return {
@@ -70,6 +94,12 @@ export default {
 
     .ship {
       height: 40px;
+    }
+    .powerup {
+      height: 30px;
+    }
+
+    .player.ship {
       transform: rotateZ(-180deg);
 
       &.intro {
