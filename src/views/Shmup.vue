@@ -1,26 +1,26 @@
 <template lang="html">
   <div class="shmup">
-    <GameCanvas :size="[400, 600]" class="game" :class="{intro, running}">
-      <template v-if="running" #background>
+    <GameCanvas :size="[400, 600]" class="game" :class="{intro: state === 'wait', running: state === 'menu'}">
+      <template v-if="state === 'menu'" #background>
         <PlanetLayer />
         <RockLayer />
         <DustLayer />
       </template>
       <template #foreground>
-        <DivSprite :size="[40, 40]" :position="[0, 100]">
-          <img class="ship player" :class="{intro, running}" src="../assets/vue.png">
+        <DivSprite :size="[40, 40]" :position="playerPosition">
+          <img class="ship player" :class="{intro: state === 'wait', running: state === 'menu'}" src="../assets/vue.png">
         </DivSprite>
-        <template v-if="running">
-          <DivSprite :size="[40, 40]" :position="[-150, 500]">
+        <template v-if="state === 'menu'">
+          <DivSprite v-if="leftPressed" :size="[40, 40]" :position="[-150, 500]">
             <img class="ship" src="../assets/vuetify.svg">
           </DivSprite>
-          <DivSprite :size="[40, 40]" :position="[-50, 500]">
+          <DivSprite v-if="upPressed" :size="[40, 40]" :position="[-50, 500]">
             <img class="ship" src="../assets/quasar.svg">
           </DivSprite>
-          <DivSprite :size="[40, 40]" :position="[50, 500]">
+          <DivSprite v-if="downPressed" :size="[40, 40]" :position="[50, 500]">
             <img class="ship" src="../assets/element.svg">
           </DivSprite>
-          <DivSprite :size="[40, 40]" :position="[150, 500]">
+          <DivSprite v-if="rightPressed" :size="[40, 40]" :position="[150, 500]">
             <img class="ship" src="../assets/vuesax.png">
           </DivSprite>
 
@@ -34,7 +34,7 @@
       </template>
     </GameCanvas>
 
-    <FakeHelloWorld v-if="!running" msg="Welcome to Your Vue.js Shmup" />
+    <FakeHelloWorld v-if="state !== 'menu'" msg="Welcome to Your Vue.js Shmup" />
     <Copyright v-else />
   </div>
 </template>
@@ -50,6 +50,15 @@ import DivSprite from '@/components/shmup/DivSprite'
 import FakeHelloWorld from '@/components/shmup/FakeHelloWorld'
 import Copyright from '@/components/shmup/Copyright'
 
+import { glMatrix } from 'gl-matrix'
+// import { glMatrix, vec2 } from 'gl-matrix'
+
+import MachineMixin from '@/mixins/MachineMixin'
+import KeymapMixin from '@/mixins/KeymapMixin'
+import { delay } from '@/utilities'
+
+glMatrix.setMatrixArrayType(Array)
+
 export default {
   name: 'shmup',
   components: {
@@ -61,20 +70,57 @@ export default {
     FakeHelloWorld,
     Copyright
   },
-  data () {
+  mixins: [
+    MachineMixin,
+    KeymapMixin
+  ],
+  keymap: {
+    'up': { flag: 'upPressed' },
+    'down': { flag: 'downPressed' },
+    'left': { flag: 'leftPressed' },
+    'right': { flag: 'rightPressed' }
+  },
+  machine () {
     return {
-      intro: true,
-      running: false
+      initial: 'wait',
+      states: {
+        wait: {
+          on: {
+            START: 'intro'
+          }
+        },
+        intro: {
+          on: {
+            DONE: 'menu'
+          }
+        },
+        menu: {
+          on: {
+            START: 'game'
+          }
+        },
+        game: {
+          on: {
+            DEAD: 'menu'
+          }
+        }
+      }
     }
   },
-  mounted () {
-    setTimeout(() => {
-      this.intro = false
-
-      setTimeout(() => {
-        this.running = true
-      }, 1500)
-    }, 1750)
+  data () {
+    return {
+      upPressed: false,
+      downPressed: false,
+      leftPressed: false,
+      rightPressed: false,
+      playerPosition: [0, 100]
+    }
+  },
+  async mounted () {
+    await delay(1.75)
+    this.send('START')
+    await delay(1.5)
+    this.send('DONE')
   }
 }
 </script>
