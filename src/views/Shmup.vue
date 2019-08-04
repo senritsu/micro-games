@@ -174,6 +174,9 @@ export default {
     await delay(1.5)
     this.send('DONE')
     this.startGame()
+  },
+  beforeDestroy () {
+    MainLoop.stop()
   }
 }
 </script>

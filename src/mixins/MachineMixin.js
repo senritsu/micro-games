@@ -13,6 +13,8 @@ export default {
   },
   methods: {
     send (event) {
+      if (!this.$_FsmMixin_service.initialized) return
+
       this.$_FsmMixin_service.send(event)
     }
   },
