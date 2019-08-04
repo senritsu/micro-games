@@ -7,6 +7,10 @@ export default {
     fpsLimit: {
       type: Number,
       default: Infinity
+    },
+    timeScale: {
+      type: Number,
+      default: 1
     }
   },
   data () {
@@ -32,11 +36,14 @@ export default {
 
       if (timestamp < this.lastFrameTimestamp + this.minimumFrameDelta) return
 
+      // NOTE account for time scale when calculating elapsed game time
+      const deltaTime = (timestamp - this.lastFrameTimestamp) * this.timeScale
+
       // NOTE in seconds for consumers, more useful that way
       const t = timestamp / 1000
-      const dt = (timestamp - this.lastFrameTimestamp) / 1000
+      const dt = deltaTime / 1000
 
-      this.remainingSimulationTime += timestamp - this.lastFrameTimestamp
+      this.remainingSimulationTime += deltaTime
       this.lastFrameTimestamp = timestamp
 
       const remainingFixedUpdateSteps = this.remainingSimulationTime / this.fixedTimestep
@@ -44,9 +51,12 @@ export default {
 
       let fixedUpdatesThisFrame = 0
 
-      while (this.remainingSimulationTime >= this.fixedTimestep) {
-        this.$emit('fixed', { t, dt: this.fixedTimestep / 1000 })
-        this.remainingSimulationTime -= this.fixedTimestep
+      // NOTE keep simulation accuracy identical for scaled time
+      const timeStep = this.fixedTimestep * this.timeScale
+
+      while (this.remainingSimulationTime >= timeStep) {
+        this.$emit('fixed', { t, dt: timeStep / 1000 })
+        this.remainingSimulationTime -= timeStep
 
         fixedUpdatesThisFrame++
         if (fixedUpdatesThisFrame >= 240) {
