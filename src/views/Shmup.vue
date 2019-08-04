@@ -36,11 +36,14 @@
 
     <FakeHelloWorld v-if="state !== 'menu'" msg="Welcome to Your Vue.js Shmup" />
     <Copyright v-else />
+
+    <MainLoop @before="before" @fixed="fixed" />
   </div>
 </template>
 
 <script>
 import GameCanvas from '@/components/shmup/GameCanvas'
+import MainLoop from '@/components/MainLoop'
 
 import PlanetLayer from '@/components/shmup/background/PlanetLayer'
 import RockLayer from '@/components/shmup/background/RockLayer'
@@ -54,7 +57,6 @@ import { glMatrix, vec2 } from 'gl-matrix'
 
 import MachineMixin from '@/mixins/MachineMixin'
 import KeymapMixin from '@/mixins/KeymapMixin'
-import MainLoopMixin from '@/mixins/MainLoopMixin'
 import { delay } from '@/utilities'
 
 glMatrix.setMatrixArrayType(Array)
@@ -63,6 +65,7 @@ export default {
   name: 'shmup',
   components: {
     GameCanvas,
+    MainLoop,
     PlanetLayer,
     RockLayer,
     DustLayer,
@@ -72,8 +75,7 @@ export default {
   },
   mixins: [
     MachineMixin,
-    KeymapMixin,
-    MainLoopMixin
+    KeymapMixin
   ],
   keymap: {
     'up': { flag: 'upPressed' },
@@ -120,7 +122,7 @@ export default {
     }
   },
   methods: {
-    begin () {
+    before () {
       let v = vec2.create()
 
       if (this.leftPressed && !this.rightPressed) {
@@ -138,10 +140,8 @@ export default {
 
       this.playerDirectionalInput = v
     },
-    update (delta) {
-      if (this.state !== 'menu2') return
-
-      const dt = delta / 1000
+    fixed ({ dt }) {
+      if (this.state !== 'menu') return
 
       let v = vec2.clone(this.playerDirectionalInput)
       vec2.scale(v, v, dt * this.playerVelocity)

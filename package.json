@@ -14,7 +14,6 @@
     "core-js": "^2.6.5",
     "gl-matrix": "^3.0.0",
     "keyboardjs": "^2.5.1",
-    "mainloop.js": "^1.0.4",
     "vue": "^2.6.10",
     "vue-router": "^3.0.3",
     "xstate": "^4.6.7"
