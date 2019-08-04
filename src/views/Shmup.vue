@@ -40,6 +40,8 @@
 </template>
 
 <script>
+import MainLoop from 'mainloop.js'
+
 import GameCanvas from '@/components/shmup/GameCanvas'
 
 import PlanetLayer from '@/components/shmup/background/PlanetLayer'
@@ -50,8 +52,7 @@ import DivSprite from '@/components/shmup/DivSprite'
 import FakeHelloWorld from '@/components/shmup/FakeHelloWorld'
 import Copyright from '@/components/shmup/Copyright'
 
-import { glMatrix } from 'gl-matrix'
-// import { glMatrix, vec2 } from 'gl-matrix'
+import { glMatrix, vec2 } from 'gl-matrix'
 
 import MachineMixin from '@/mixins/MachineMixin'
 import KeymapMixin from '@/mixins/KeymapMixin'
@@ -113,7 +114,58 @@ export default {
       downPressed: false,
       leftPressed: false,
       rightPressed: false,
-      playerPosition: [0, 100]
+      playerPosition: [0, 100],
+      playerVelocity: 350
+    }
+  },
+  methods: {
+    startGame () {
+      MainLoop
+        .setUpdate(this.update)
+        .setDraw(this.draw)
+        .start()
+    },
+    stopGame () {
+      MainLoop.stop()
+    },
+    update (delta) {
+      const dt = delta / 1000
+
+      let pos = vec2.clone(this.playerPosition)
+      let v = vec2.create()
+
+      if (this.leftPressed && !this.rightPressed) {
+        vec2.add(v, v, [-1, 0])
+      }
+      if (!this.leftPressed && this.rightPressed) {
+        vec2.add(v, v, [1, 0])
+      }
+      if (this.upPressed && !this.downPressed) {
+        vec2.add(v, v, [0, 1])
+      }
+      if (!this.upPressed && this.downPressed) {
+        vec2.add(v, v, [0, -1])
+      }
+
+      vec2.add(pos, pos, vec2.scale(v, v, dt * this.playerVelocity))
+
+      if (pos[0] < -175) {
+        pos[0] = -175
+      }
+      if (pos[0] > 175) {
+        pos[0] = 175
+      }
+      if (pos[1] < 25) {
+        pos[1] = 25
+      }
+      if (pos[1] > 575) {
+        pos[1] = 575
+      }
+
+      this.playerPosition = pos
+    },
+    draw () {
+
     }
   },
   async mounted () {
@@ -121,6 +173,7 @@ export default {
     this.send('START')
     await delay(1.5)
     this.send('DONE')
+    this.startGame()
   }
 }
 </script>
