@@ -24,10 +24,10 @@
             <img class="ship" src="../assets/vuesax.png">
           </DivSprite>
 
-          <DivSprite :size="[30, 30]" :position="[-100, 300]">
+          <DivSprite v-if="!shooting" :size="[30, 30]" :position="[-100, 300]">
             <img class="powerup" src="../assets/made-with-vue.png">
           </DivSprite>
-          <DivSprite :size="[30, 30]" :position="[100, 300]">
+          <DivSprite v-if="shooting" :size="[30, 30]" :position="[100, 300]">
             <img class="powerup" src="../assets/made-with-vuetify.png">
           </DivSprite>
         </template>
@@ -77,11 +77,14 @@ export default {
     MachineMixin,
     KeymapMixin
   ],
-  keymap: {
-    'up': { flag: 'upPressed' },
-    'down': { flag: 'downPressed' },
-    'left': { flag: 'leftPressed' },
-    'right': { flag: 'rightPressed' }
+  realtimeKeymap: {
+    'up': 'upPressed',
+    'down': 'downPressed',
+    'left': 'leftPressed',
+    'right': 'rightPressed'
+  },
+  eventKeymap: {
+    'space': 'shoot'
   },
   machine () {
     return {
@@ -118,7 +121,8 @@ export default {
       rightPressed: false,
       playerPosition: [0, 100],
       playerDirectionalInput: [0, 0],
-      playerVelocity: 350
+      playerVelocity: 350,
+      shooting: false
     }
   },
   methods: {
@@ -163,6 +167,13 @@ export default {
       }
 
       this.playerPosition = pos
+    },
+    async shoot () {
+      if (this.shooting) return
+
+      this.shooting = true
+      await delay(1)
+      this.shooting = false
     }
   },
   async created () {

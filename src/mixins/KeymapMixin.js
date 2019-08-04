@@ -2,23 +2,34 @@ import keyboard from 'keyboardjs'
 
 export default {
   created () {
-    const { keymap } = this.$options
+    const { eventKeymap, realtimeKeymap } = this.$options
 
     this.$_KeymapMixin_handlers = {}
 
-    for (const key in keymap) {
-      const options = keymap[key]
+    if (realtimeKeymap) {
+      for (const key in realtimeKeymap) {
+        const propertyName = realtimeKeymap[key]
 
-      if (options.flag) {
+        if (this.$data[propertyName] === undefined) {
+          throw new Error(`[KeymapMixin] invalid realtime key mapping: property ${propertyName} does not exist on Vue instance`)
+        }
+
         const downHandler = () => {
-          this[options.flag] = true
+          this[propertyName] = true
         }
         const upHandler = () => {
-          this[options.flag] = false
+          this[propertyName] = false
         }
+
         keyboard.bind(key, downHandler, upHandler)
         this.$_KeymapMixin_handlers[key] = [downHandler, upHandler]
-      } else {
+      }
+    }
+
+    if (eventKeymap) {
+      for (const key in eventKeymap) {
+        const options = eventKeymap[key]
+
         let handler
         if (typeof options === 'string') {
           handler = this[options]
