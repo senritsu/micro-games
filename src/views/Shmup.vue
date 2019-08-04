@@ -139,7 +139,7 @@ export default {
       this.playerDirectionalInput = v
     },
     update (delta) {
-      if (this.state !== 'menu') return
+      if (this.state !== 'menu2') return
 
       const dt = delta / 1000
 
