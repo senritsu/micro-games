@@ -40,8 +40,6 @@
 </template>
 
 <script>
-import MainLoop from 'mainloop.js'
-
 import GameCanvas from '@/components/shmup/GameCanvas'
 
 import PlanetLayer from '@/components/shmup/background/PlanetLayer'
@@ -56,6 +54,7 @@ import { glMatrix, vec2 } from 'gl-matrix'
 
 import MachineMixin from '@/mixins/MachineMixin'
 import KeymapMixin from '@/mixins/KeymapMixin'
+import MainLoopMixin from '@/mixins/MainLoopMixin'
 import { delay } from '@/utilities'
 
 glMatrix.setMatrixArrayType(Array)
@@ -73,7 +72,8 @@ export default {
   },
   mixins: [
     MachineMixin,
-    KeymapMixin
+    KeymapMixin,
+    MainLoopMixin
   ],
   keymap: {
     'up': { flag: 'upPressed' },
@@ -115,23 +115,12 @@ export default {
       leftPressed: false,
       rightPressed: false,
       playerPosition: [0, 100],
+      playerDirectionalInput: [0, 0],
       playerVelocity: 350
     }
   },
   methods: {
-    startGame () {
-      MainLoop
-        .setUpdate(this.update)
-        .setDraw(this.draw)
-        .start()
-    },
-    stopGame () {
-      MainLoop.stop()
-    },
-    update (delta) {
-      const dt = delta / 1000
-
-      let pos = vec2.clone(this.playerPosition)
+    begin () {
       let v = vec2.create()
 
       if (this.leftPressed && !this.rightPressed) {
@@ -147,7 +136,18 @@ export default {
         vec2.add(v, v, [0, -1])
       }
 
-      vec2.add(pos, pos, vec2.scale(v, v, dt * this.playerVelocity))
+      this.playerDirectionalInput = v
+    },
+    update (delta) {
+      if (this.state !== 'menu') return
+
+      const dt = delta / 1000
+
+      let v = vec2.clone(this.playerDirectionalInput)
+      vec2.scale(v, v, dt * this.playerVelocity)
+
+      let pos = vec2.clone(this.playerPosition)
+      vec2.add(pos, pos, v)
 
       if (pos[0] < -175) {
         pos[0] = -175
@@ -163,20 +163,13 @@ export default {
       }
 
       this.playerPosition = pos
-    },
-    draw () {
-
     }
   },
-  async mounted () {
+  async created () {
     await delay(1.75)
     this.send('START')
     await delay(1.5)
     this.send('DONE')
-    this.startGame()
-  },
-  beforeDestroy () {
-    MainLoop.stop()
   }
 }
 </script>
