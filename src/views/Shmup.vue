@@ -24,15 +24,19 @@
             <img class="ship" src="../assets/vuesax.png">
           </DivSprite>
 
-          <DivSprite v-if="!shooting" :size="[30, 30]" :position="[-100, 300]">
+          <ProjectileLayer :projectiles="projectiles" />
+
+          <DivSprite v-if="!spacePressed" :size="[30, 30]" :position="[-100, 300]">
             <img class="powerup" src="../assets/made-with-vue.png">
           </DivSprite>
-          <DivSprite v-if="shooting" :size="[30, 30]" :position="[100, 300]">
+          <DivSprite v-if="!spacePressed" :size="[30, 30]" :position="[100, 300]">
             <img class="powerup" src="../assets/made-with-vuetify.png">
           </DivSprite>
         </template>
       </template>
     </GameCanvas>
+
+    <Instructions />
 
     <FakeHelloWorld v-if="state !== 'menu'" msg="Welcome to Your Vue.js Shmup" />
     <Copyright v-else />
@@ -49,8 +53,11 @@ import PlanetLayer from '@/components/shmup/background/PlanetLayer'
 import RockLayer from '@/components/shmup/background/RockLayer'
 import DustLayer from '@/components/shmup/background/DustLayer'
 
+import ProjectileLayer from '@/components/shmup/foreground/ProjectileLayer'
+
 import DivSprite from '@/components/shmup/DivSprite'
 import FakeHelloWorld from '@/components/shmup/FakeHelloWorld'
+import Instructions from '@/components/shmup/Instructions'
 import Copyright from '@/components/shmup/Copyright'
 
 import { glMatrix, vec2 } from 'gl-matrix'
@@ -69,8 +76,10 @@ export default {
     PlanetLayer,
     RockLayer,
     DustLayer,
+    ProjectileLayer,
     DivSprite,
     FakeHelloWorld,
+    Instructions,
     Copyright
   },
   mixins: [
@@ -81,10 +90,8 @@ export default {
     'up': 'upPressed',
     'down': 'downPressed',
     'left': 'leftPressed',
-    'right': 'rightPressed'
-  },
-  eventKeymap: {
-    'space': 'shoot'
+    'right': 'rightPressed',
+    'space': 'spacePressed'
   },
   machine () {
     return {
@@ -119,10 +126,12 @@ export default {
       downPressed: false,
       leftPressed: false,
       rightPressed: false,
+      spacePressed: false,
       playerPosition: [0, 100],
       playerDirectionalInput: [0, 0],
       playerVelocity: 350,
-      shooting: false
+      lastShot: 0,
+      projectiles: []
     }
   },
   methods: {
@@ -144,7 +153,7 @@ export default {
 
       this.playerDirectionalInput = v
     },
-    fixed ({ dt }) {
+    fixed ({ t, dt }) {
       if (this.state !== 'menu') return
 
       let v = vec2.clone(this.playerDirectionalInput)
@@ -167,13 +176,35 @@ export default {
       }
 
       this.playerPosition = pos
+
+      this.projectiles = this.projectiles.reduce((newProjectiles, projectile) => {
+        if (projectile.position[1] > 600) return newProjectiles
+
+        const position = vec2.clone(projectile.position)
+        const v = vec2.clone(projectile.v)
+        vec2.scale(v, v, dt)
+        vec2.add(position, position, v)
+        newProjectiles.push({
+          ...projectile,
+          position
+        })
+
+        return newProjectiles
+      }, [])
+
+      if (this.spacePressed && (this.lastShot < t - 0.1)) {
+        this.shoot()
+        this.lastShot = t
+      }
     },
     async shoot () {
-      if (this.shooting) return
-
-      this.shooting = true
-      await delay(1)
-      this.shooting = false
+      const position = vec2.clone(this.playerPosition)
+      vec2.add(position, position, [0, 20])
+      this.projectiles.push({
+        type: 'player',
+        position,
+        v: [0, 400]
+      })
     }
   },
   async created () {
