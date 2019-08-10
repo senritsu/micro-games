@@ -1,9 +1,9 @@
 <template lang="html">
   <div>
     <SimpleParticle
-      v-for="({ position, type }, i) in projectiles"
+      v-for="({ collider: { x, y }, type }, i) in projectiles"
       :key="i"
-      v-bind="{position, size: sizes[type]}"
+      v-bind="{ position: [x, y], size: sizes[type] }"
       :class="[type]"
     />
   </div>

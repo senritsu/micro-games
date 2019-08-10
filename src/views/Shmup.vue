@@ -24,14 +24,9 @@
             <img class="ship" src="../assets/vuesax.png">
           </DivSprite>
 
-          <ProjectileLayer :projectiles="projectiles" />
+          <ProjectileLayer :projectiles="gameState.entities.projectiles" />
 
-          <DivSprite v-if="!spacePressed" :size="[30, 30]" :position="[-100, 300]">
-            <img class="powerup" src="../assets/made-with-vue.png">
-          </DivSprite>
-          <DivSprite v-if="!spacePressed" :size="[30, 30]" :position="[100, 300]">
-            <img class="powerup" src="../assets/made-with-vuetify.png">
-          </DivSprite>
+          <PowerUp v-for="(powerup, i) in gameState.entities.powerups" :key="i" v-bind="powerup" />
         </template>
       </template>
     </GameCanvas>
@@ -54,17 +49,20 @@ import RockLayer from '@/components/shmup/background/RockLayer'
 import DustLayer from '@/components/shmup/background/DustLayer'
 
 import ProjectileLayer from '@/components/shmup/foreground/ProjectileLayer'
+import PowerUp from '@/components/shmup/foreground/PowerUp'
 
 import DivSprite from '@/components/shmup/DivSprite'
 import FakeHelloWorld from '@/components/shmup/FakeHelloWorld'
 import Instructions from '@/components/shmup/Instructions'
 import Copyright from '@/components/shmup/Copyright'
 
-import { glMatrix, vec2 } from 'gl-matrix'
+import { glMatrix } from 'gl-matrix'
 
 import MachineMixin from '@/mixins/MachineMixin'
 import KeymapMixin from '@/mixins/KeymapMixin'
 import { delay } from '@/utilities'
+
+import { reset, handleInput, update } from '@/components/shmup/game-logic'
 
 glMatrix.setMatrixArrayType(Array)
 
@@ -77,6 +75,7 @@ export default {
     RockLayer,
     DustLayer,
     ProjectileLayer,
+    PowerUp,
     DivSprite,
     FakeHelloWorld,
     Instructions,
@@ -127,84 +126,33 @@ export default {
       leftPressed: false,
       rightPressed: false,
       spacePressed: false,
-      playerPosition: [0, 100],
-      playerDirectionalInput: [0, 0],
-      playerVelocity: 350,
-      lastShot: 0,
-      projectiles: []
+      gameState: reset()
+    }
+  },
+  computed: {
+    playerPosition () {
+      return [
+        this.gameState.entities.player.collider.x,
+        this.gameState.entities.player.collider.y
+      ]
     }
   },
   methods: {
     before () {
-      let v = vec2.create()
+      const {
+        upPressed: up,
+        downPressed: down,
+        leftPressed: left,
+        rightPressed: right,
+        spacePressed: fire
+      } = this
 
-      if (this.leftPressed && !this.rightPressed) {
-        vec2.add(v, v, [-1, 0])
-      }
-      if (!this.leftPressed && this.rightPressed) {
-        vec2.add(v, v, [1, 0])
-      }
-      if (this.upPressed && !this.downPressed) {
-        vec2.add(v, v, [0, 1])
-      }
-      if (!this.upPressed && this.downPressed) {
-        vec2.add(v, v, [0, -1])
-      }
-
-      this.playerDirectionalInput = v
+      handleInput(this.gameState, { up, down, left, right, fire })
     },
-    fixed ({ t, dt }) {
+    fixed (frameTimings) {
       if (this.state !== 'menu') return
 
-      let v = vec2.clone(this.playerDirectionalInput)
-      vec2.scale(v, v, dt * this.playerVelocity)
-
-      let pos = vec2.clone(this.playerPosition)
-      vec2.add(pos, pos, v)
-
-      if (pos[0] < -175) {
-        pos[0] = -175
-      }
-      if (pos[0] > 175) {
-        pos[0] = 175
-      }
-      if (pos[1] < 25) {
-        pos[1] = 25
-      }
-      if (pos[1] > 575) {
-        pos[1] = 575
-      }
-
-      this.playerPosition = pos
-
-      this.projectiles = this.projectiles.reduce((newProjectiles, projectile) => {
-        if (projectile.position[1] > 600) return newProjectiles
-
-        const position = vec2.clone(projectile.position)
-        const v = vec2.clone(projectile.v)
-        vec2.scale(v, v, dt)
-        vec2.add(position, position, v)
-        newProjectiles.push({
-          ...projectile,
-          position
-        })
-
-        return newProjectiles
-      }, [])
-
-      if (this.spacePressed && (this.lastShot < t - 0.1)) {
-        this.shoot()
-        this.lastShot = t
-      }
-    },
-    async shoot () {
-      const position = vec2.clone(this.playerPosition)
-      vec2.add(position, position, [0, 20])
-      this.projectiles.push({
-        type: 'player',
-        position,
-        v: [0, 400]
-      })
+      update(this.gameState, frameTimings)
     }
   },
   async created () {
@@ -232,9 +180,7 @@ export default {
     .ship {
       height: 40px;
     }
-    .powerup {
-      height: 30px;
-    }
+
 
     .player.ship {
       transform: rotateZ(-180deg);
