@@ -5,10 +5,10 @@ import { chance, directionFromKeys } from './helpers'
 
 export const canvasSize = [400, 600]
 
-export const reset = () => {
+export const createInitialState = () => {
   const system = new Collisions()
 
-  return {
+  const state = {
     system,
     settings: {
       player: {
@@ -17,14 +17,25 @@ export const reset = () => {
         projectileVelocity: 400
       },
       enemies: {
-        spawnDelay: 3, // seconds
-        velocity: 150
+        spawnDelay: 1.5, // seconds
+        shotDelay: 1,
+        velocity: 150,
+        projectileVelocity: 300
       }
     },
     input: {
       direction: [0, 0],
       fire: false
-    },
+    }
+  }
+
+  reset(state)
+
+  return state
+}
+
+export function reset (state) {
+  Object.assign(state, {
     level: {
       scrollPosition: 0
     },
@@ -34,19 +45,19 @@ export const reset = () => {
     },
     entities: {
       player: {
-        collider: system.createCircle(0, 100, 20),
+        collider: state.system.createCircle(0, 100, 20),
         health: 3,
         score: 0
       },
       enemies: [],
       powerups: [
-        { collider: system.createCircle(-100, 300, 15), type: 'health' },
-        { collider: system.createCircle(100, 300, 15), type: 'shield' }
+        { collider: state.system.createCircle(-100, 300, 15), type: 'health' },
+        { collider: state.system.createCircle(100, 300, 15), type: 'shield' }
       ],
       projectiles: [],
       effects: []
     }
-  }
+  })
 }
 
 const getPosition = collider => [collider.x, collider.y]
@@ -97,7 +108,7 @@ function updatePlayer (state, { t, dt }) {
   updateCollider(state.entities.player.collider, pos)
 
   if (state.input.fire && (state.timers.lastShot < t - (1 / state.settings.player.fireRate))) {
-    spawnPlayerProjectile(state)
+    spawnPlayerProjectile(state, 'player')
     state.timers.lastShot = t
   }
 }
@@ -128,13 +139,25 @@ function spawnPlayerProjectile (state) {
   })
 }
 
+function spawnEnemyProjectile (state, enemy) {
+  const pos = getPosition(enemy.collider)
+  vec2.add(pos, pos, [0, -20])
+  state.entities.projectiles.push({
+    type: 'enemy',
+    collider: state.system.createCircle(...pos, 10),
+    v: [0, -state.settings.enemies.projectileVelocity]
+  })
+}
+
 function spawnRandomEnemy (state) {
   const x = chance.integer({ min: -175, max: 175 })
   const y = 610
   state.entities.enemies.push({
     type: chance.pickone(['fighter', 'elite', 'station', 'boss']),
     collider: state.system.createCircle(x, y, 20),
-    v: [0, -state.settings.enemies.velocity]
+    v: [0, -state.settings.enemies.velocity],
+    lastShot: 0,
+    shotDelay: state.settings.enemies.shotDelay
   })
 }
 
@@ -149,6 +172,11 @@ function updateEnemies (state, { t, dt }) {
 
     moveEntity(enemy, dt)
 
+    if (enemy.collider.y <= 550 && t >= (enemy.lastShot + enemy.shotDelay)) {
+      spawnEnemyProjectile(state, enemy)
+      enemy.lastShot = t
+    }
+
     newEnemies.push(enemy)
 
     return newEnemies
@@ -162,7 +190,9 @@ function checkCollisions (state, { t }) {
         state.entities.powerups = state.entities.powerups.filter(x => x !== powerup)
         state.entities.effects.push({
           position: getPosition(state.entities.player.collider),
-          type: 'pickup'
+          type: 'pickup',
+          t,
+          duration: 1
         })
       }
     }
@@ -171,6 +201,7 @@ function checkCollisions (state, { t }) {
   for (const projectile of state.entities.projectiles.filter(x => x.type === 'enemy')) {
     for (const body of projectile.collider.potentials()) {
       if (body === state.entities.player.collider && body.collides(projectile.collider)) {
+        console.log('player hit by projectile')
         state.entities.projectiles = state.entities.projectiles.filter(x => x !== projectile)
         state.entities.player.health--
         state.entities.effects.push({

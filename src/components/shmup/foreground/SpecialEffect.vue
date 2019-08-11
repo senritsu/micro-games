@@ -17,6 +17,7 @@ export default {
     size () {
       switch (this.type) {
         case 'pickup': return 10
+        case 'hit': return 10
         case 'explosion': return 50
         default: throw new Error(`invalid effect type '${this.type}'`)
       }

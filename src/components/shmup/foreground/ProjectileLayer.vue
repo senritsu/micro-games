@@ -37,4 +37,7 @@ export default {
 ::v-deep .particle.player {
   background-color: yellow;
 }
+::v-deep .particle.enemy {
+  background-color: red;
+}
 </style>

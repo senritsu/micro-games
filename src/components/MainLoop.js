@@ -15,6 +15,7 @@ export default {
   },
   data () {
     return {
+      totalSimulationTime: 0,
       remainingSimulationTime: 0,
       lastFrameTimestamp: 0,
       running: false
@@ -40,8 +41,9 @@ export default {
       const deltaTime = (timestamp - this.lastFrameTimestamp) * this.timeScale
 
       // NOTE in seconds for consumers, more useful that way
-      const t = timestamp / 1000
       const dt = deltaTime / 1000
+      this.totalSimulationTime += dt
+      const t = this.totalSimulationTime
 
       this.remainingSimulationTime += deltaTime
       this.lastFrameTimestamp = timestamp
