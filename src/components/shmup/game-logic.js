@@ -138,7 +138,7 @@ function spawnPlayerProjectile (state) {
   state.entities.projectiles.push({
     id: chance.guid(),
     type: 'player',
-    collider: state.system.createCircle(...pos, 10),
+    collider: state.system.createCircle(...pos, 4),
     v: [0, state.settings.player.projectileVelocity]
   })
 }
@@ -149,7 +149,7 @@ function spawnEnemyProjectile (state, enemy) {
   state.entities.projectiles.push({
     id: chance.guid(),
     type: 'enemy',
-    collider: state.system.createCircle(...pos, 10),
+    collider: state.system.createCircle(...pos, 3),
     v: [0, -state.settings.enemies.projectileVelocity]
   })
 }
