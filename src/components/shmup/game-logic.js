@@ -1,7 +1,7 @@
 import { vec2 } from 'gl-matrix'
 import { Collisions } from 'collisions'
 
-import { directionFromKeys } from './helpers'
+import { chance, directionFromKeys } from './helpers'
 
 export const canvasSize = [400, 600]
 
@@ -15,6 +15,10 @@ export const reset = () => {
         velocity: 350,
         fireRate: 10, // per second
         projectileVelocity: 400
+      },
+      enemies: {
+        spawnDelay: 3, // seconds
+        velocity: 150
       }
     },
     input: {
@@ -22,29 +26,43 @@ export const reset = () => {
       fire: false
     },
     level: {
-
+      scrollPosition: 0
     },
     timers: {
-      lastShot: 0
+      lastShot: 0,
+      lastSpawn: 0
     },
     entities: {
       player: {
-        collider: system.createCircle(0, 100, 20)
+        collider: system.createCircle(0, 100, 20),
+        health: 3,
+        score: 0
       },
+      enemies: [],
       powerups: [
         { collider: system.createCircle(-100, 300, 15), type: 'health' },
         { collider: system.createCircle(100, 300, 15), type: 'shield' }
       ],
-      projectiles: []
+      projectiles: [],
+      effects: []
     }
   }
 }
 
 const getPosition = collider => [collider.x, collider.y]
 
-const updateCollider = (collider, [x, y]) => {
+function updateCollider (collider, [x, y]) {
   collider.x = x
   collider.y = y
+}
+
+function moveEntity ({ collider, v }, dt) {
+  const pos = getPosition(collider)
+  v = vec2.clone(v)
+  vec2.scale(v, v, dt)
+  vec2.add(pos, pos, v)
+
+  updateCollider(collider, pos)
 }
 
 function confine (v, [xMin, xMax, yMin, yMax]) {
@@ -88,16 +106,16 @@ function updateProjectiles (state, { dt }) {
   state.entities.projectiles = state.entities.projectiles.reduce((newProjectiles, projectile) => {
     if (projectile.collider.y > 600) return newProjectiles
 
-    const pos = getPosition(projectile.collider)
-    const v = vec2.clone(projectile.v)
-    vec2.scale(v, v, dt)
-    vec2.add(pos, pos, v)
+    moveEntity(projectile, dt)
 
-    updateCollider(projectile.collider, pos)
     newProjectiles.push(projectile)
 
     return newProjectiles
   }, [])
+}
+
+function updateEffects (state, { t }) {
+  state.entities.effects = state.entities.effects.filter(effect => t < (effect.t + effect.duration))
 }
 
 function spawnPlayerProjectile (state) {
@@ -110,28 +128,91 @@ function spawnPlayerProjectile (state) {
   })
 }
 
-function updateEnemies () {
-  // spawning, ai and stuff
+function spawnRandomEnemy (state) {
+  const x = chance.integer({ min: -175, max: 175 })
+  const y = 610
+  state.entities.enemies.push({
+    type: chance.pickone(['fighter', 'elite', 'station', 'boss']),
+    collider: state.system.createCircle(x, y, 20),
+    v: [0, -state.settings.enemies.velocity]
+  })
 }
 
-function checkCollisions (state) {
+function updateEnemies (state, { t, dt }) {
+  if (t >= (state.timers.lastSpawn + state.settings.enemies.spawnDelay)) {
+    spawnRandomEnemy(state)
+    state.timers.lastSpawn = t
+  }
+
+  state.entities.enemies = state.entities.enemies.reduce((newEnemies, enemy) => {
+    if (enemy.collider.y < -20) return newEnemies
+
+    moveEntity(enemy, dt)
+
+    newEnemies.push(enemy)
+
+    return newEnemies
+  }, [])
+}
+
+function checkCollisions (state, { t }) {
   for (const powerup of state.entities.powerups) {
     for (const body of powerup.collider.potentials()) {
       if (body === state.entities.player.collider && body.collides(powerup.collider)) {
         state.entities.powerups = state.entities.powerups.filter(x => x !== powerup)
+        state.entities.effects.push({
+          position: getPosition(state.entities.player.collider),
+          type: 'pickup'
+        })
+      }
+    }
+  }
+
+  for (const projectile of state.entities.projectiles.filter(x => x.type === 'enemy')) {
+    for (const body of projectile.collider.potentials()) {
+      if (body === state.entities.player.collider && body.collides(projectile.collider)) {
+        state.entities.projectiles = state.entities.projectiles.filter(x => x !== projectile)
+        state.entities.player.health--
+        state.entities.effects.push({
+          position: getPosition(state.entities.player.collider),
+          type: 'hit',
+          t,
+          duration: 1
+        })
+      }
+    }
+  }
+
+  for (const projectile of state.entities.projectiles.filter(x => x.type === 'player')) {
+    for (const body of projectile.collider.potentials()) {
+      const enemy = state.entities.enemies.find(x => x.collider === body)
+
+      if (enemy && body.collides(projectile.collider)) {
+        state.entities.projectiles = state.entities.projectiles.filter(x => x !== projectile)
+        state.entities.enemies = state.entities.enemies.filter(x => x !== enemy)
+        state.entities.effects.push({
+          position: getPosition(enemy.collider),
+          type: 'explosion',
+          t,
+          duration: 1
+        })
       }
     }
   }
 }
 
 export function update (state, frameTimings) {
+  if (state.entities.player.health <= 0) return
+
   updatePlayer(state, frameTimings)
 
   updateEnemies(state, frameTimings)
 
   updateProjectiles(state, frameTimings)
 
+  updateEffects(state, frameTimings)
+
   state.system.update()
 
-  checkCollisions(state)
+  checkCollisions(state, frameTimings)
 }

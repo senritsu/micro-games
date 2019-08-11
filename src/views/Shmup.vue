@@ -11,22 +11,13 @@
           <img class="ship player" :class="{intro: state === 'wait', running: state === 'menu'}" src="../assets/vue.png">
         </DivSprite>
         <template v-if="state === 'menu'">
-          <DivSprite v-if="leftPressed" :size="[40, 40]" :position="[-150, 500]">
-            <img class="ship" src="../assets/vuetify.svg">
-          </DivSprite>
-          <DivSprite v-if="upPressed" :size="[40, 40]" :position="[-50, 500]">
-            <img class="ship" src="../assets/quasar.svg">
-          </DivSprite>
-          <DivSprite v-if="downPressed" :size="[40, 40]" :position="[50, 500]">
-            <img class="ship" src="../assets/element.svg">
-          </DivSprite>
-          <DivSprite v-if="rightPressed" :size="[40, 40]" :position="[150, 500]">
-            <img class="ship" src="../assets/vuesax.png">
-          </DivSprite>
+          <EnemyShip v-for="(enemy, i) in gameState.entities.enemies" :key="`enemy-${i}`" v-bind="enemy" />
 
           <ProjectileLayer :projectiles="gameState.entities.projectiles" />
 
-          <PowerUp v-for="(powerup, i) in gameState.entities.powerups" :key="i" v-bind="powerup" />
+          <PowerUp v-for="(powerup, i) in gameState.entities.powerups" :key="`powerup-${i}`" v-bind="powerup" />
+
+          <SpecialEffect v-for="(effect, i) in gameState.entities.effects" :key="`effect-${i}`" v-bind="effect" />
         </template>
       </template>
     </GameCanvas>
@@ -49,7 +40,9 @@ import RockLayer from '@/components/shmup/background/RockLayer'
 import DustLayer from '@/components/shmup/background/DustLayer'
 
 import ProjectileLayer from '@/components/shmup/foreground/ProjectileLayer'
+import EnemyShip from '@/components/shmup/foreground/EnemyShip'
 import PowerUp from '@/components/shmup/foreground/PowerUp'
+import SpecialEffect from '@/components/shmup/foreground/SpecialEffect'
 
 import DivSprite from '@/components/shmup/DivSprite'
 import FakeHelloWorld from '@/components/shmup/FakeHelloWorld'
@@ -75,7 +68,9 @@ export default {
     RockLayer,
     DustLayer,
     ProjectileLayer,
+    EnemyShip,
     PowerUp,
+    SpecialEffect,
     DivSprite,
     FakeHelloWorld,
     Instructions,
@@ -180,7 +175,6 @@ export default {
     .ship {
       height: 40px;
     }
-
 
     .player.ship {
       transform: rotateZ(-180deg);

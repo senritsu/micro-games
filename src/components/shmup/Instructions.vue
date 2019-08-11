@@ -2,7 +2,7 @@
   <div class="instructions">
     <p>Arrow keys to move</p>
     <p>Space to shoot</p>
-    <p>Enemies not working yet</p>
+    <p>Enemies and powerups not doing much yet</p>
   </div>
 </template>
 
