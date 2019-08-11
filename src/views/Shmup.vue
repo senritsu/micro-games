@@ -11,17 +11,18 @@
           <img class="ship player" :class="{intro: state === 'wait', running: state === 'menu'}" src="../assets/vue.png">
         </DivSprite>
         <template v-if="state === 'game'">
-          <EnemyShip v-for="(enemy, i) in gameState.entities.enemies" :key="`enemy-${i}`" v-bind="enemy" />
+          <EnemyShip v-for="(enemy, i) in gameState.entities.enemies" :key="enemy.id" v-bind="enemy" />
 
           <ProjectileLayer :projectiles="gameState.entities.projectiles" />
 
-          <PowerUp v-for="(powerup, i) in gameState.entities.powerups" :key="`powerup-${i}`" v-bind="powerup" />
+          <PowerUp v-for="(powerup, i) in gameState.entities.powerups" :key="powerup.id" v-bind="powerup" />
 
-          <SpecialEffect v-for="(effect, i) in gameState.entities.effects" :key="`effect-${i}`" v-bind="effect" />
+          <SpecialEffect v-for="(effect, i) in gameState.entities.effects" :key="effect.id" v-bind="effect" />
         </template>
       </template>
       <template #ui>
         <StartScreen v-if="state === 'menu'" :gameover="!gameState.entities.player.health" />
+        <IngameHud v-if="state === 'game' || state === 'menu'" v-bind="gameState.entities.player" />
       </template>
     </GameCanvas>
 
@@ -48,6 +49,7 @@ import PowerUp from '@/components/shmup/foreground/PowerUp'
 import SpecialEffect from '@/components/shmup/foreground/SpecialEffect'
 
 import StartScreen from '@/components/shmup/ui/StartScreen'
+import IngameHud from '@/components/shmup/ui/IngameHud'
 
 import DivSprite from '@/components/shmup/DivSprite'
 
@@ -78,6 +80,7 @@ export default {
     PowerUp,
     SpecialEffect,
     StartScreen,
+    IngameHud,
     DivSprite,
     FakeHelloWorld,
     Instructions,
