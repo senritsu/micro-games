@@ -12,8 +12,8 @@ export default () => {
       entity.collider.entityId = entity.id
     },
     update (entity) {
-      entity.collider.x = entity.position.x
-      entity.collider.y = entity.position.y
+      entity.collider.x = entity.position[0]
+      entity.collider.y = entity.position[1]
     },
     postUpdate () {
       system.update()
